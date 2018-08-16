@@ -8,25 +8,31 @@ import Json.Decode.Pipeline exposing (decode, required, custom)
 
 main =
     let
-        value =
-            encode example
-
         text =
-            Encode.encode 4 value
+            case example of
+                Ok json ->
+                    let
+                        value =
+                            encode json
+                    in
+
+                    Encode.encode 4 value
+
+                Err error -> error
     in
         Html.text text
 
 
-example : Entry
+example : Result String Entry
 example =
-    let
-        exampleEntry : Result String Entry
-        exampleEntry =
-            Decode.decodeString directoryEntry """[{"location": "b"}, {"location": "c"}]"""
-    in
-        Result.withDefault (File "a") exampleEntry
-
-
+    Decode.decodeString directoryEntry """{
+  "type": "directory",
+  "contents": [
+    { "type": "file", "location":"a"},
+    { "type": "file", "location":"b"},
+    { "type": "directory", "contents": [{ "type": "file", "location":"c"}] }
+  ]
+}"""
 
 -- Model
 
@@ -45,13 +51,21 @@ encode entry =
     case entry of
         File location ->
             Encode.object
-                [ ( "location", Encode.string location )
+                [ ( "type", Encode.string "file" )
+                , ( "location", Encode.string location )
                 ]
 
         Directory entries ->
-            entries
-                |> List.map encode
-                |> Encode.list
+            let
+                contents =
+                    entries
+                        |> List.map encode
+                        |> Encode.list
+            in
+                Encode.object
+                    [ ( "type", Encode.string "directory" )
+                    , ( "contents", contents )
+                    ]
 
 
 
@@ -60,7 +74,17 @@ encode entry =
 
 entry : Decode.Decoder Entry
 entry =
-    Decode.oneOf [ fileEntry, directoryEntry ]
+    Decode.field "type" Decode.string
+        |> Decode.andThen selectDecoder
+
+selectDecoder : String -> Decode.Decoder Entry
+selectDecoder type_ =
+    case type_ of
+        "file" -> fileEntry
+
+        "directory" -> directoryEntry
+
+        _ -> Decode.fail ("Unknown Entry type: \"" ++ type_ ++ "\"")
 
 
 fileEntry : Decode.Decoder Entry
@@ -72,4 +96,4 @@ fileEntry =
 directoryEntry : Decode.Decoder Entry
 directoryEntry =
     decode Directory
-        |> custom (Decode.list (Decode.lazy (\_ -> entry)))
+        |> required "contents" (Decode.list (Decode.lazy (\_ -> entry)))
