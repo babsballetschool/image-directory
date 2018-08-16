@@ -1,2 +1,2 @@
 # image-directory
-Elm project showing an image directory structure
+Elm project showing an image directory structure.
