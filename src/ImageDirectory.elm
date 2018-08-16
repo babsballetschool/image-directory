@@ -7,6 +7,18 @@ main =
     Html.text "Hello, World!"
 
 
+entry : Entry
+entry =
+    Directory
+        [ File "A"
+        , File "B"
+        , Directory
+            [ File "D/A"
+            , File "D/B"
+            ]
+        ]
+
+
 
 -- Model
 
