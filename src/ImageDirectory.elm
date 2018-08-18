@@ -1,26 +1,29 @@
 module ImageDirectory exposing (..)
 
-import Html
+import Html exposing (program)
+import Html.Attributes as Attribute
 import Json.Encode as Encode
 import Json.Decode as Decode
 import Json.Decode.Pipeline exposing (decode, required, custom)
 
 
+main : Program Never Entry msg
 main =
     let
-        text =
+        entry =
             case example of
-                Ok json ->
-                    let
-                        value =
-                            encode json
-                    in
+                Ok entry ->
+                    entry
 
-                    Encode.encode 4 value
-
-                Err error -> error
+                Err error ->
+                    File "something went wrong"
     in
-        Html.text text
+        program
+            { init = ( entry, Cmd.none )
+            , view = view
+            , update = \_ -> (\entry -> ( entry, Cmd.none ))
+            , subscriptions = \_ -> Sub.none
+            }
 
 
 example : Result String Entry
@@ -33,6 +36,8 @@ example =
     { "type": "directory", "contents": [{ "type": "file", "location":"c"}] }
   ]
 }"""
+
+
 
 -- Model
 
@@ -77,14 +82,18 @@ entry =
     Decode.field "type" Decode.string
         |> Decode.andThen selectDecoder
 
+
 selectDecoder : String -> Decode.Decoder Entry
 selectDecoder type_ =
     case type_ of
-        "file" -> fileEntry
+        "file" ->
+            fileEntry
 
-        "directory" -> directoryEntry
+        "directory" ->
+            directoryEntry
 
-        _ -> Decode.fail ("Unknown Entry type: \"" ++ type_ ++ "\"")
+        _ ->
+            Decode.fail ("Unknown Entry type: \"" ++ type_ ++ "\"")
 
 
 fileEntry : Decode.Decoder Entry
@@ -97,3 +106,34 @@ directoryEntry : Decode.Decoder Entry
 directoryEntry =
     decode Directory
         |> required "contents" (Decode.list (Decode.lazy (\_ -> entry)))
+
+
+
+-- View
+
+
+view : Entry -> Html.Html msg
+view entry =
+    case entry of
+        File location ->
+            fileView location
+
+        Directory entries ->
+            directoryView entries
+
+
+fileView : String -> Html.Html msg
+fileView location =
+    Html.div [ Attribute.class "file" ]
+        [ Html.img [ Attribute.src location ] []
+        , Html.span [] [ Html.text location ]
+        ]
+
+
+directoryView : List Entry -> Html.Html msg
+directoryView entries =
+    let
+        contents =
+            List.map view entries
+    in
+        Html.div [ Attribute.class "directory" ] contents
