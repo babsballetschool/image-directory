@@ -31,9 +31,9 @@ example =
     Decode.decodeString directoryEntry """{
   "type": "directory",
   "contents": [
-    { "type": "file", "location":"a"},
-    { "type": "file", "location":"b"},
-    { "type": "directory", "contents": [{ "type": "file", "location":"c"}] }
+    { "type": "file", "location":"http://via.placeholder.com/20x20"},
+    { "type": "file", "location":"http://via.placeholder.com/20x30"},
+    { "type": "directory", "contents": [{ "type": "file", "location":"http://via.placeholder.com/30x20"}] }
   ]
 }"""
 
