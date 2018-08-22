@@ -1,5 +1,10 @@
 module ImageDirectory exposing (Entry, encode, decoder, view)
 
+{-| Elm project showing an image directory structure.
+
+@docs Entry, encode, decoder, view
+-}
+
 import Html exposing (program)
 import Html.Attributes as Attribute
 import Html.Events as Event
@@ -43,6 +48,8 @@ example =
 -- Model
 
 
+{-| Represents the directory structure for an image directory.
+-}
 type Entry
     = File String
     | Directory (List Entry)
@@ -52,6 +59,8 @@ type Entry
 -- Encode
 
 
+{-| Encodes an Entry into a `Json.Encode.Value`
+-}
 encode : Entry -> Encode.Value
 encode entry =
     case entry of
@@ -78,6 +87,8 @@ encode entry =
 -- Decode
 
 
+{-| Decodes an Json representation of an `Entry`
+-}
 decoder : Decode.Decoder Entry
 decoder =
     Decode.field "type" Decode.string
@@ -130,6 +141,8 @@ update message entry =
 -- View
 
 
+{-| Accepts a `onFileClick` function and returns a view for an Entry
+-}
 view : (String -> msg) -> Entry -> Html.Html msg
 view onFileClick entry =
     case entry of
