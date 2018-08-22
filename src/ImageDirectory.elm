@@ -2,12 +2,13 @@ module ImageDirectory exposing (Entry, encode, decoder, view)
 
 import Html exposing (program)
 import Html.Attributes as Attribute
+import Html.Events as Event
 import Json.Encode as Encode
 import Json.Decode as Decode
 import Json.Decode.Pipeline exposing (decode, required, custom)
 
 
-main : Program Never Entry msg
+main : Program Never Entry Message
 main =
     let
         entry =
@@ -20,7 +21,7 @@ main =
     in
         program
             { init = ( entry, Cmd.none )
-            , view = view
+            , view = view Clicked
             , update = update
             , subscriptions = \_ -> Sub.none
             }
@@ -108,37 +109,49 @@ directoryEntry =
         |> required "contents" (Decode.list (Decode.lazy (\_ -> decoder)))
 
 
+
 -- Update
 
-update : msg -> Entry -> (Entry, Cmd msg)
-update _ entry =
-    (entry, Cmd.none)
+
+type Message
+    = Clicked String
+
+
+update : msg -> Entry -> ( Entry, Cmd msg )
+update message entry =
+    let
+        _ =
+            Debug.log "message: " (toString message)
+    in
+        ( entry, Cmd.none )
+
+
 
 -- View
 
 
-view : Entry -> Html.Html msg
-view entry =
+view : (String -> msg) -> Entry -> Html.Html msg
+view onFileClick entry =
     case entry of
         File location ->
-            fileView location
+            fileView (onFileClick location) location
 
         Directory entries ->
-            directoryView entries
+            directoryView onFileClick entries
 
 
-fileView : String -> Html.Html msg
-fileView location =
-    Html.div [ Attribute.class "file" ]
+fileView : msg -> String -> Html.Html msg
+fileView message location =
+    Html.div [ Attribute.class "file", Event.onClick message ]
         [ Html.img [ Attribute.src location ] []
         , Html.span [] [ Html.text location ]
         ]
 
 
-directoryView : List Entry -> Html.Html msg
-directoryView entries =
+directoryView : (String -> msg) -> List Entry -> Html.Html msg
+directoryView onFileClick entries =
     let
         contents =
-            List.map view entries
+            List.map (view onFileClick) entries
     in
         Html.div [ Attribute.class "directory" ] contents
