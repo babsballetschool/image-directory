@@ -1,4 +1,4 @@
-module ImageDirectory exposing (..)
+module ImageDirectory exposing (Entry, encode, decoder, view)
 
 import Html exposing (program)
 import Html.Attributes as Attribute
@@ -77,8 +77,8 @@ encode entry =
 -- Decode
 
 
-entry : Decode.Decoder Entry
-entry =
+decoder : Decode.Decoder Entry
+decoder =
     Decode.field "type" Decode.string
         |> Decode.andThen selectDecoder
 
@@ -105,7 +105,7 @@ fileEntry =
 directoryEntry : Decode.Decoder Entry
 directoryEntry =
     decode Directory
-        |> required "contents" (Decode.list (Decode.lazy (\_ -> entry)))
+        |> required "contents" (Decode.list (Decode.lazy (\_ -> decoder)))
 
 
 
