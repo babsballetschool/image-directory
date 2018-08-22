@@ -21,7 +21,7 @@ main =
         program
             { init = ( entry, Cmd.none )
             , view = view
-            , update = \_ -> (\entry -> ( entry, Cmd.none ))
+            , update = update
             , subscriptions = \_ -> Sub.none
             }
 
@@ -108,6 +108,11 @@ directoryEntry =
         |> required "contents" (Decode.list (Decode.lazy (\_ -> decoder)))
 
 
+-- Update
+
+update : msg -> Entry -> (Entry, Cmd msg)
+update _ entry =
+    (entry, Cmd.none)
 
 -- View
 
