@@ -3,36 +3,38 @@ module ImageDirectory exposing (Entry, encode, decoder, view)
 {-| Elm project showing an image directory structure.
 
 @docs Entry, encode, decoder, view
+
 -}
 
-import Html exposing (program)
+import Browser exposing (element)
+import Html
 import Html.Attributes as Attribute
 import Html.Events as Event
+import Json.Decode as Decode exposing (succeed)
+import Json.Decode.Pipeline exposing (custom, required)
 import Json.Encode as Encode
-import Json.Decode as Decode
-import Json.Decode.Pipeline exposing (decode, required, custom)
 
 
-main : Program Never Entry Message
+main : Program () Entry Message
 main =
     let
         entry =
             case example of
-                Ok entry ->
-                    entry
+                Ok example_entry ->
+                    example_entry
 
                 Err error ->
                     File "something went wrong"
     in
-        program
-            { init = ( entry, Cmd.none )
-            , view = view Clicked
-            , update = update
-            , subscriptions = \_ -> Sub.none
-            }
+    element
+        { init = \_ -> ( entry, Cmd.none )
+        , view = view Clicked
+        , update = update
+        , subscriptions = \_ -> Sub.none
+        }
 
 
-example : Result String Entry
+example : Result Decode.Error Entry
 example =
     Decode.decodeString directoryEntry """{
   "type": "directory",
@@ -74,13 +76,12 @@ encode entry =
             let
                 contents =
                     entries
-                        |> List.map encode
-                        |> Encode.list
+                        |> Encode.list encode
             in
-                Encode.object
-                    [ ( "type", Encode.string "directory" )
-                    , ( "contents", contents )
-                    ]
+            Encode.object
+                [ ( "type", Encode.string "directory" )
+                , ( "contents", contents )
+                ]
 
 
 
@@ -110,13 +111,13 @@ selectDecoder type_ =
 
 fileEntry : Decode.Decoder Entry
 fileEntry =
-    decode File
+    succeed File
         |> required "location" Decode.string
 
 
 directoryEntry : Decode.Decoder Entry
 directoryEntry =
-    decode Directory
+    succeed Directory
         |> required "contents" (Decode.list (Decode.lazy (\_ -> decoder)))
 
 
@@ -132,9 +133,9 @@ update : msg -> Entry -> ( Entry, Cmd msg )
 update message entry =
     let
         _ =
-            Debug.log "message: " (toString message)
+            Debug.log "message: " (Debug.toString message)
     in
-        ( entry, Cmd.none )
+    ( entry, Cmd.none )
 
 
 
@@ -167,4 +168,4 @@ directoryView onFileClick entries =
         contents =
             List.map (view onFileClick) entries
     in
-        Html.div [ Attribute.class "directory" ] contents
+    Html.div [ Attribute.class "directory" ] contents
