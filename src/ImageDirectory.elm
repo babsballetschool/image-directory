@@ -131,10 +131,6 @@ type Message
 
 update : msg -> Entry -> ( Entry, Cmd msg )
 update message entry =
-    let
-        _ =
-            Debug.log "message: " (Debug.toString message)
-    in
     ( entry, Cmd.none )
 
 
